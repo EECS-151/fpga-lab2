@@ -1,20 +1,21 @@
+`default_nettype none
 module adder_tester (
-    output [13:0] adder_operand1,
-    output [13:0] adder_operand2,
-    input [14:0] structural_sum,
-    input [14:0] behavioral_sum,
-    input clk,
-    output test_fail
+    output wire [13:0] adder_operand1,
+    output wire [13:0] adder_operand2,
+    input wire [14:0] structural_sum,
+    input wire [14:0] behavioral_sum,
+    input wire clk,
+    output wire test_fail
 );
-    reg error = 0;
+    logic error = 0;
     assign test_fail = error;
 
-    reg [27:0] operands = 0;
+    logic [27:0] operands = 0;
     assign adder_operand1 = operands[13:0];
     assign adder_operand2 = operands[27:14];
 
     // Iterate the operands continuously until all combinations are tried
-    always @ (posedge clk) begin
+    always_ff @ (posedge clk) begin
         operands <= operands + 1'd1;
     end
 
