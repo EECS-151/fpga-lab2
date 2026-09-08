@@ -1,1 +1,9 @@
 *.tmp
+*.tb
+*.fsdb
+*.log
+*.key
+verdiLog/
+novas.*
+sim/csrc/
+sim/*.daidir
