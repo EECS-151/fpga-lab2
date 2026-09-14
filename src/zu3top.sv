@@ -1,10 +1,9 @@
-`default_nettype none
 module zu3top (
-    input wire CLK_100_P,
-    input wire CLK_100_N,
-    input wire [3:0] BUTTONS,
-    input wire [7:0] SWITCHES,
-    output wire [7:0] LEDS
+    input logic CLK_100_P,
+    input logic CLK_100_N,
+    input logic [3:0] BUTTONS,
+    input logic [7:0] SWITCHES,
+    output logic [7:0] LEDS
 );
     wire CLK_100;
     IBUFDS ibufds_clk (

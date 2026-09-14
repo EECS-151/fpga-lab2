@@ -1,11 +1,10 @@
-`default_nettype none
 module adder_tester (
-    output wire [13:0] adder_operand1,
-    output wire [13:0] adder_operand2,
-    input wire [14:0] structural_sum,
-    input wire [14:0] behavioral_sum,
-    input wire clk,
-    output wire test_fail
+    output logic [13:0] adder_operand1,
+    output logic [13:0] adder_operand2,
+    input logic [14:0] structural_sum,
+    input logic [14:0] behavioral_sum,
+    input logic clk,
+    output logic test_fail
 );
     logic error = 0;
     assign test_fail = error;
