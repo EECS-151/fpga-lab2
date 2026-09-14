@@ -24,6 +24,7 @@ module counter_tb();
             fsdb_file = "default.fsdb";
         end 
         $fsdbDumpfile(fsdb_file);
+        $fsdbDumpvars(0, counter_tb);
 
         // TODO: Change input values and step forward in time to test
         // your counter and its clock enable/disable functionality.

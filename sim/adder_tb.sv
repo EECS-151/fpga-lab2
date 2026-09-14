@@ -20,6 +20,7 @@ module adder_tb();
             fsdb_file = "default.fsdb";
         end 
         $fsdbDumpfile(fsdb_file);
+        $fsdbDumpvars(0, adder_tb);
 
         a = 14'd1;
         b = 14'd1;
