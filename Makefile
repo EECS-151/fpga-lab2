@@ -8,7 +8,7 @@ RTL                     += $(subst /cygdrive/c/,C:/, $(shell find $(ABS_TOP)/src
 CONSTRAINTS             += $(subst /cygdrive/c/,C:/, $(shell find $(ABS_TOP)/src -type f -name "*.xdc"))
 TOP                     ?= zu3top
 VCS                     := $(VCS_HOME)/bin/vcs -full64
-VCS_OPTS     		:= -notice -line +lint=all,noVCDE,noNS,noSVA-UA -sverilog -kdb -timescale=1ns/10ps -debug_access+all
+VCS_OPTS     			:= -notice -line +lint=all,noVCDE,noNS,noSVA-UA -sverilog -kdb -timescale=1ns/10ps -debug_access+all -ignore initializer_driver_checks
 SIM_RTL                 := $(subst /cygdrive/c/,C:/, $(shell find $(ABS_TOP)/sim -type f \( -name "*.v" -o -name "*.sv" \)))
 VVP                     := vvp
 VERDI                   ?= $(VERDI_HOME)/bin/verdi
