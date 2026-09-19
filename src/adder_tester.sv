@@ -1,9 +1,9 @@
 module adder_tester (
     output logic [13:0] adder_operand1,
     output logic [13:0] adder_operand2,
-    input logic [14:0] structural_sum,
-    input logic [14:0] behavioral_sum,
-    input logic clk,
+    input wire logic [14:0] structural_sum,
+    input wire logic [14:0] behavioral_sum,
+    input wire logic clk,
     output logic test_fail
 );
     logic error = 0;

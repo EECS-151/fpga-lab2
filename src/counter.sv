@@ -1,7 +1,7 @@
 module counter (
-  input clk,
-  input ce,
-  output [3:0] LEDS
+  input wire logic clk,
+  input wire logic ce,
+  output logic [3:0] LEDS
 );
     // TODO: delete this assignment once you write your own logic.
     assign LEDS = 4'd0;

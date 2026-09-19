@@ -1,21 +1,22 @@
+`default_nettype none
 module zu3top (
-    input logic CLK_100_P,
-    input logic CLK_100_N,
-    input logic [3:0] BUTTONS,
-    input logic [7:0] SWITCHES,
+    input wire logic CLK_100_P,
+    input wire logic CLK_100_N,
+    input wire logic [3:0] BUTTONS,
+    input wire logic [7:0] SWITCHES,
     output logic [7:0] LEDS
 );
-    wire CLK_100;
+    logic CLK_100;
     IBUFDS ibufds_clk (
         .I(CLK_100_P),
         .IB(CLK_100_N),
         .O(CLK_100)
     );
 
-    wire [7:0] adder_leds;
-    wire [7:0] counter_leds;
+    logic [7:0] adder_leds;
+    logic [7:0] counter_leds;
     
-    wire [14:0] adder_out;
+    logic [14:0] adder_out;
     structural_adder user_adder (
         .a({12'b0,BUTTONS[1:0]}),
         .b({12'b0,BUTTONS[3:2]}),
@@ -24,9 +25,9 @@ module zu3top (
     assign adder_leds[3:0] = adder_out[3:0]; // truncate upper bits
     
     // Self test of the structural adder
-    wire [13:0] adder_operand1, adder_operand2;
-    wire [14:0] structural_out, behavioral_out;
-    wire test_fail;
+    logic [13:0] adder_operand1, adder_operand2;
+    logic [14:0] structural_out, behavioral_out;
+    logic test_fail;
     assign adder_leds[4] = ~test_fail;
     assign adder_leds[5] = ~test_fail;
     assign adder_leds[7:6] = 0;
