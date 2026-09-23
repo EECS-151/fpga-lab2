@@ -60,29 +60,48 @@ build/impl/$(TOP).bit: build/synth/$(TOP).dcp $(SCRIPTS)/impl.tcl
 impl: build/impl/$(TOP).bit
 all: build/impl/$(TOP).bit
 
+# assign-fpga-board holds the board until its stdin hits EOF, so feed it from a
+# FIFO held open on fd 3 by this recipe's shell. When the shell exits (success,
+# failure, or Ctrl-C), fd 3 closes and assign-fpga-board releases the board.
+# If an older instance (e.g. `sleep infinity | assign-fpga-board`) is still
+# holding the board, kill the user's `sleep infinity` feeding it and retry once.
+HW_SERVER := /share/instsww/xilinx/2025.2/Vivado/bin/hw_server
+
 program: build/impl/$(TOP).bit $(SCRIPTS)/program.tcl
-	@rm -f $(SCRIPTS)/assign_board_test_log.tmp; \
-	assign-fpga-board > $(SCRIPTS)/assign_board_test_log.tmp 2>&1 & \
-	ASSIGN_PID=$$!; \
-	while ! grep -q "Vivado hw_server port:" $(SCRIPTS)/assign_board_test_log.tmp && ! grep -q "already have an instance" $(SCRIPTS)/assign_board_test_log.tmp; do \
-		sleep 0.1; \
-	done; \
-	if grep -q "already have an instance" $(SCRIPTS)/assign_board_test_log.tmp; then \
-		PORT=$$(cat $(SCRIPTS)/port.tmp); \
-		SERIAL=$$(cat $(SCRIPTS)/serial.tmp); \
-	else \
-		sleep infinity | assign-fpga-board > $(SCRIPTS)/assign_board_log.tmp 2>&1 & \
-		while ! grep -q "Vivado hw_server port:" $(SCRIPTS)/assign_board_log.tmp && ! grep -q "already have an instance" $(SCRIPTS)/assign_board_log.tmp; do \
+	@LOG=$(SCRIPTS)/assign_board_log.tmp; FIFO=$(SCRIPTS)/assign_board_fifo.tmp; \
+	trap 'exec 3>&-; [ -n "$$PORT" ] && pkill -u $$USER -f "hw_server -stcp:localhost:$$PORT\b"; wait' EXIT; \
+	trap 'exit 130' INT TERM; \
+	for ATTEMPT in 1 2; do \
+		rm -f $$LOG $$FIFO; mkfifo $$FIFO; \
+		assign-fpga-board < $$FIFO > $$LOG 2>&1 & \
+		ASSIGN_PID=$$!; \
+		exec 3> $$FIFO; rm -f $$FIFO; \
+		while [ -d /proc/$$ASSIGN_PID ] && ! grep -q "Vivado hw_server port:" $$LOG; do \
 			sleep 0.1; \
 		done; \
-		PORT=$$(grep -oP 'Vivado hw_server port: \K\d+' $(SCRIPTS)/assign_board_log.tmp); \
-		SERIAL=$$(grep -oP 'serial \K[A-Z0-9]+' $(SCRIPTS)/assign_board_log.tmp); \
-		echo $$PORT > $(SCRIPTS)/port.tmp; \
-		echo $$SERIAL > $(SCRIPTS)/serial.tmp; \
-		/share/instsww/xilinx/2025.2/Vivado/bin/hw_server -stcp:localhost:$$PORT > /dev/null 2>&1 & \
+		if [ $$ATTEMPT = 2 ] || ! grep -q "already have an instance" $$LOG; then \
+			break; \
+		fi; \
+		exec 3>&-; \
+		OLD_PID=$$(grep -oP 'PID: \K\d+' $$LOG); \
+		echo "Stopping leftover assign-fpga-board (PID $$OLD_PID) and hw_server..."; \
+		pkill -u $$USER -x -f 'sleep infinity'; \
+		pkill -u $$USER -x hw_server; \
+		for i in $$(seq 50); do [ -d /proc/$$OLD_PID ] || break; sleep 0.1; done; \
+	done; \
+	if ! grep -q "Vivado hw_server port:" $$LOG; then \
+		cat $$LOG; \
+		if grep -q "already have an instance" $$LOG; then \
+			echo "Could not stop it automatically. If you started assign-fpga-board in another"; \
+			echo "terminal, press Ctrl-C there and run make program again."; \
+		fi; \
+		exit 1; \
 	fi; \
+	PORT=$$(grep -oP 'Vivado hw_server port: \K\d+' $$LOG); \
+	SERIAL=$$(grep -oP 'serial \K[A-Z0-9]+' $$LOG); \
 	echo "BOARD SERIAL: $$SERIAL"; \
-	cd build/impl && $(VIVADO) $(VIVADO_OPTS) -source $(SCRIPTS)/program.tcl -tclargs $$PORT
+	$(HW_SERVER) -stcp:localhost:$$PORT > /dev/null 2>&1 3>&- & \
+	cd build/impl && $(VIVADO) $(VIVADO_OPTS) -source $(SCRIPTS)/program.tcl -tclargs $$PORT 3>&-
 
 program-force:
 	cd build/impl && $(VIVADO) $(VIVADO_OPTS) -source $(SCRIPTS)/program.tcl
